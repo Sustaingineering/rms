@@ -1,33 +1,24 @@
+#Microcontroller Imports
 import board
-import digitalio
 import time
-from adafruit_dps310.basic import DPS310
-from adafruit_display_text.bitmap_label import Label
-from displayio import Group
-from terminalio import FONT
+from adafruit_dps310.basic import DPS310 #DPS310
+import adafruit_sht4x #SHT45
+import adafruit_ina228 #INA228
 
-#SHT45
-import adafruit_sht4x
-
-#INA228
-import adafruit_ina228
-
-
-print("Hello World")
-
-i2c = board.I2C()  # uses board.SCL and board.SDA
+#Board setup
+i2c = board.I2C()
 # i2c = board.STEMMA_I2C()  # For using the built-in STEMMA QT connector on a microcontroller
+
+#DPS310
 dps310 = DPS310(i2c)
 
-#SHT45 Code
+#SHT45
 sht = adafruit_sht4x.SHT4x(i2c)
 print("Found SHT4x with serial number", hex(sht.serial_number))
 sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
 
-#INA228 Code
+#INA228
 ina228 = adafruit_ina228.INA228(i2c)
-
-
 
 while True:
     temperature, relative_humidity = sht.measurements
@@ -52,7 +43,7 @@ while True:
     time.sleep(1.0)
 
 """ 
-Adafruit RP2040
+Adafruit RP2040 Testing
 led = digitalio.DigitalInOut(board.LED)
 led.direction = digitalio.Direction.OUTPUT
 print("Hello World")
