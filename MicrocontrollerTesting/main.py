@@ -20,6 +20,8 @@ sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
 #INA228
 ina228 = adafruit_ina228.INA228(i2c)
 
+print("timestamp,sht_temp_C,sht_rh_pct,dps_temp_C,dps_press_hPa,ina_current_mA,ina_bus_V,ina_shunt_mV,ina_power_mW,ina_energy_J,ina_die_C")
+
 while True:
     temperature, relative_humidity = sht.measurements
     print("\nSHT45 Measurements:")
@@ -40,6 +42,19 @@ while True:
     print(f"Energy: {ina228.energy:.2f} J")
     print(f"Temperature: {ina228.die_temperature:.2f} °C")
     print("----------------------------------------")
+
+    timestamp = time.time()  # seconds since epoch
+    sht_temp, sht_rh = sht.measurements
+    dps_temp = dps310.temperature
+    dps_press = dps310.pressure
+    ina_current = ina228.current
+    ina_bus = ina228.bus_voltage
+    ina_shunt = ina228.shunt_voltage * 1000
+    ina_power = ina228.power
+    ina_energy = ina228.energy
+    ina_die_temp = ina228.die_temperature
+
+    print(f"{timestamp:.3f},{sht_temp:.2f},{sht_rh:.2f},{dps_temp:.2f},{dps_press:.2f},{ina_current:.2f},{ina_bus:.2f},{ina_shunt:.2f},{ina_power:.2f},{ina_energy:.2f},{ina_die_temp:.2f}")
     time.sleep(1.0)
 
 """ 
