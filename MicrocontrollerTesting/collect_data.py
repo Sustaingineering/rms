@@ -3,7 +3,7 @@ import csv
 import time
 
 # --- Configuration ---
-SERIAL_PORT = '/dev/tty.usbmodem101' 
+SERIAL_PORT = '/dev/ttyACM0' 
 BAUD_RATE = 115200
 OUTPUT_FILE = 'sensor_data.csv'
 
