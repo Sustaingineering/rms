@@ -5,7 +5,6 @@ from adafruit_dps310.basic import DPS310 #DPS310
 import adafruit_sht4x #SHT45
 import adafruit_ina228 #INA228
 import adafruit_ahtx0 #AHTX0
-import adafruit_dht #am2301b 
 
 #Board setup
 i2c = board.I2C()
@@ -23,8 +22,8 @@ sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
 ina228 = adafruit_ina228.INA228(i2c)
 
 #AHTX0
-#ahtx0 = adafruit_ahtx0.AHTx0(i2c)
-dht_device = adafruit_dht.DHT22(board.D4)
+ahtx0 = adafruit_ahtx0.AHTx0(i2c)
+
 
 while True: #FOR CSV WRITING
 
@@ -44,17 +43,15 @@ while True: #FOR CSV WRITING
     ina_energy = ina228.energy
     ina_die_temp = ina228.die_temperature
 
-    #AM2301B
-    am_c = dht_device.temperature
-    am_hum = dht_device.humidity
-
     #Timestamp
     timestamp = time.monotonic() # Using monotonic() is often better for duration on MCUs
 
-    print(f"{timestamp:.3f},{sht_temp:.2f},{sht_rh:.2f},{dps_temp:.2f},{dps_press:.2f},{ina_current:.2f},{ina_bus:.2f},{ina_shunt:.2f},{ina_power:.2f},{ina_energy:.2f},{ina_die_temp:.2f},{am_c:.2f},{am_hum:.2f}\n")
+    print(f"{timestamp:.3f},{sht_temp:.2f},{sht_rh:.2f},{dps_temp:.2f},{dps_press:.2f},{ina_current:.2f},{ina_bus:.2f},{ina_shunt:.2f},{ina_power:.2f},{ina_energy:.2f},{ina_die_temp:.2f}\n")
     
-    #ahtx0_temp = ahtx0.temperature
-    #print("\nAHTX0 Temperature: %0.1f C" % ahtx0.temperature)
+    #AM2301B Sensor
+    ahtx0_temp = ahtx0.temperature
+    print("\nAHTX0 Temperature: %0.1f C" % ahtx0.temperature)
+    
     time.sleep(1.0)
 
 # """ HUMAN-READABLE OUTPUT - NOT MEANT FOR CSV
