@@ -2,12 +2,12 @@ import time
 import board
 from analogio import AnalogIn
 
-analog_0in = AnalogIn(board.A0)
+analog_2in = AnalogIn(board.A2)
 
 def get_voltage(pin):
     return (pin.value * 3.3) / 65536
 
-def check_status(voltage):
+def check_status_anemometer(voltage):
     if voltage > 3.2:
         return "open"
     elif voltage < 0.1:
@@ -24,8 +24,8 @@ last_state = "open"
 start_time = time.monotonic()
 
 while True:
-    voltage = get_voltage(analog_0in)
-    state = check_status(voltage)
+    voltage = get_voltage(analog_2in)
+    state = check_status_anemometer(voltage)
 
     # Detect a transition from open -> closed
     if state == "closed" and last_state == "open":
