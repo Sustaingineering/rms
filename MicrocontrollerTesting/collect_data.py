@@ -3,9 +3,17 @@ import csv
 import time
 
 # --- Configuration ---
-SERIAL_PORT = '/dev/ttyACM0' 
+SERIAL_PORT = '/dev/tty.usbmodem101' 
 BAUD_RATE = 115200
 OUTPUT_FILE = 'sensor_data.csv'
+
+########## To Edit #####################
+#True = Data read from sensor
+#False = Data ignored from sensor 
+print_INA228 = True
+print_AHTX0 = True
+print_lightGate = True
+print_anemometer = True
 
 print(f"Attempting to connect to {SERIAL_PORT}...")
 
@@ -16,7 +24,7 @@ try:
     time.sleep(2) # Wait for the connection to establish and MCU to reset
 
     # Header
-    header = "timestamp,sht_temp_C,sht_rh_pct,dps_temp_C,dps_press_hPa,ina_current_mA,ina_bus_V,ina_shunt_mV,ina_power_mW,ina_energy_J,ina_die_C"
+    header = "timestamp,ina_current,ina_voltage,axtx0_temp,rpm,lg_closure_count,lg_wind_speed,lg_avg_speed"
     header = header.split(',')
 
     # Determining whether the actual CSV file exists
