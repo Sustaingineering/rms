@@ -3,7 +3,7 @@ import csv
 import time
 
 # --- Configuration ---
-SERIAL_PORT = '/dev/tty.usbmodem101' 
+SERIAL_PORT = '/dev/tty.usbmodem1101' 
 BAUD_RATE = 115200
 OUTPUT_FILE = 'sensor_data.csv'
 
@@ -14,6 +14,8 @@ print_INA228 = True
 print_AHTX0 = True
 print_lightGate = True
 print_anemometer = True
+
+frequency = 20 # frequency (smaller value = faster collection rate)
 
 print(f"Attempting to connect to {SERIAL_PORT}...")
 
@@ -61,17 +63,17 @@ try:
             while True:
                 try:
                     count += 1
-                    print(count)
+                    #print(count)
                     # Read one line of data from the serial port
                     data_line = ser.readline().decode('utf-8').strip()
-
+                
                     # Check if the line is not empty
                     if data_line:
-                        print(f"Received: {data_line}")
                         # Split the comma-separated string into a list
                         data_values = data_line.split(',')
-                        if (count % 100) == 0:
+                        if (count % frequency) == 0:
                             csv_writer.writerow(data_values)
+                            print(f"Saving: {data_line}")
                         
 
                 except UnicodeDecodeError:
@@ -89,17 +91,17 @@ try:
             while True:
                 try:
                     count += 1
-                    print(count)
+                    #print(count)
                     # Read one line of data from the serial port
                     data_line = ser.readline().decode('utf-8').strip()
                 
                     # Check if the line is not empty
                     if data_line:
-                        print(f"Received: {data_line}")
                         # Split the comma-separated string into a list
                         data_values = data_line.split(',')
-                        if (count % 100) == 0:
+                        if (count % frequency) == 0:
                             csv_writer.writerow(data_values)
+                            print(f"Saving: {data_line}")
 
                 except UnicodeDecodeError:
                     print("Warning: Could not decode a line. Skipping.")

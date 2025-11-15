@@ -11,15 +11,9 @@ from analogio import AnalogIn #pins for microcontroller
 print_INA228 = True
 print_AHTX0 = True
 print_lightGate = True
-print_anemometer = True
+print_anemometer = False
 
-# How many times the lightgate sensor closes per rotation: 
-closes_per_rot = 12 
-#########################################
-
-
-#Order printed: Timestamp, INA Current, INA Voltage, AHTX0 Temperature, Light Gate RPM, Anemometer Closure Count, Anemometer Wind Speed, Anemometer Average Speed
-
+closes_per_rot = 12 # How many times the lightgate sensor closes per rotation
 
 #Board setup
 i2c = board.I2C()
@@ -78,7 +72,7 @@ last_avg_speed = 0
 while True: #FOR CSV WRITING
     #Timestamp
     timestamp = time.monotonic() # Using monotonic() is often better for duration on MCUs
-    print(f"{timestamp:.3f}", end=' ')
+    print(f"{timestamp:.3f},", end=' ')
 
     #For light gate:
     voltage_0 = get_voltage(analog_0_in)
@@ -89,14 +83,19 @@ while True: #FOR CSV WRITING
 
     #INA
     if print_INA228 == True:
-        ina_current = ina228.current
-        ina_bus = ina228.bus_voltage
-    print(f"{ina_current:2.2f},{ina_bus:2.2f}", end=',')
+        ina_current = f"{ina228.current:2.2f}"
+        ina_bus = f"{ina228.bus_voltage:2.2f}"
+    else:
+        ina_current = False
+        ina_bus = False
+    print(f"{ina_current},{ina_bus}", end=',')
 
     #AM2301B Sensor
     if print_AHTX0:
-        ahtx0_temp = ahtx0.temperature
-    print(f"{ahtx0_temp:3.2f}", end=',')
+        ahtx0_temp = f"{ahtx0.temperature:2.2f}"
+    else:
+        ahtx0_temp = False
+    print(f"{ahtx0_temp}", end=',')
     
     #Light gate:
     if print_lightGate == True:
@@ -124,7 +123,9 @@ while True: #FOR CSV WRITING
                 current_time = time.monotonic()
                 time_since_open = current_time - last_open
                 last_open = current_time
-        print(f"{rpm}", end=',')
+    else:
+        rpm = False
+    print(f"{rpm}", end=',')
 
     #anemometer:
     if print_anemometer == True:
@@ -150,13 +151,13 @@ while True: #FOR CSV WRITING
 
             last_closure_count = closure_count
             last_wind_speed = wind_speed
-            last_avg_speed = avg_speed
+            last_avg_speed = f"{avg_speed:4.2f}"
 
             closure_count = 0
             start_time = time.monotonic()
-        print(f"{last_closure_count:2d},{last_wind_speed:4.2f},{last_avg_speed:4.2f}", end='')
+    else:
+        last_avg_speed = False
+    print(f"{last_avg_speed}", end='')
 
     print(" ")
-
-    #Refresh rate: 
     time.sleep(0.001)
