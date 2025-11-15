@@ -13,7 +13,13 @@ print_AHTX0 = True
 print_lightGate = True
 print_anemometer = True
 
-closes_per_rot = 12 # How many times the lightgate sensor closes per rotation
+# How many times the lightgate sensor closes per rotation: 
+closes_per_rot = 12 
+#########################################
+
+
+#Order printed: Timestamp, INA Current, INA Voltage, AHTX0 Temperature, Light Gate RPM, Anemometer Closure Count, Anemometer Wind Speed, Anemometer Average Speed
+
 
 #Board setup
 i2c = board.I2C()
@@ -150,13 +156,7 @@ while True: #FOR CSV WRITING
             start_time = time.monotonic()
         print(f"{last_closure_count:2d},{last_wind_speed:4.2f},{last_avg_speed:4.2f}", end='')
 
-    # pin 0: {voltage_0:1.3f}, pin 1: {voltage_1:1.3f}, pin 0: {status_0:8s}, pin 1: {status_1:8s}, 
     print(" ")
+
+    #Refresh rate: 
     time.sleep(0.001)
-
-
-    #pin 0 high = closed
-    #pin 1 high = open
-    #15 rps
-
-    #-----------------------------------------------------
