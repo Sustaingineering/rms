@@ -11,9 +11,10 @@ from analogio import AnalogIn #pins for microcontroller
 print_INA228 = True
 print_AHTX0 = True
 print_lightGate = True
-print_anemometer = False
+print_anemometer = True
 
 closes_per_rot = 12 # How many times the lightgate sensor closes per rotation
+wind_speed_factor = 0.66 
 
 #Board setup
 i2c = board.I2C()
@@ -140,7 +141,7 @@ while True: #FOR CSV WRITING
 
         # Every second, print the number of closures and reset the counter
         if time.monotonic() - start_time >= 1.0:
-            wind_speed = 0.66 * closure_count
+            wind_speed = wind_speed_factor * closure_count
             wind_speeds.append(wind_speed)
 
             # Keep only the most recent avg_window readings
