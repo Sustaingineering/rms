@@ -7,14 +7,6 @@ SERIAL_PORT = '/dev/tty.usbmodem1101'
 BAUD_RATE = 115200
 OUTPUT_FILE = 'sensor_data.csv'
 
-########## To Edit #####################
-#True = Data read from sensor
-#False = Data ignored from sensor 
-print_INA228 = True
-print_AHTX0 = True
-print_lightGate = True
-print_anemometer = True
-
 frequency = 20 # frequency (smaller value = faster collection rate)
 
 print(f"Attempting to connect to {SERIAL_PORT}...")
