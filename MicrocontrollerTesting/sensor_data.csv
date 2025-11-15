@@ -1,1 +1,6 @@
-timestamp,sht_temp_C,sht_rh_pct,dps_temp_C,dps_press_hPa,ina_current_mA,ina_bus_V,ina_shunt_mV,ina_power_mW,ina_energy_J,ina_die_C
+timestamp,ina_current,ina_voltage,axtx0_temp,rpm,lg_avg_speed
+5620.561 ,-0.00,0.00,21.18,0,0.00
+5625.582 ,-0.00,0.00,21.21,0,0.00
+5630.600 ,-0.00,0.00,21.18,0,0.00
+5635.623 ,-0.00,0.00,21.21,0,0.00
+5640.645 ,0.00,0.00,21.19,0,0.00

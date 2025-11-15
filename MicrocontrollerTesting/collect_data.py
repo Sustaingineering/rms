@@ -17,6 +17,8 @@ print_anemometer = True
 
 print(f"Attempting to connect to {SERIAL_PORT}...")
 
+count = 0
+
 try:
     # Connect to the serial port
     ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
@@ -24,7 +26,7 @@ try:
     time.sleep(2) # Wait for the connection to establish and MCU to reset
 
     # Header
-    header = "timestamp,ina_current,ina_voltage,axtx0_temp,rpm,lg_closure_count,lg_wind_speed,lg_avg_speed"
+    header = "timestamp,ina_current,ina_voltage,axtx0_temp,rpm,lg_avg_speed"
     header = header.split(',')
 
     # Determining whether the actual CSV file exists
@@ -45,7 +47,7 @@ try:
 
         first_row = str(next(csv_file, None))
         
-        if first_row == "timestamp,sht_temp_C,sht_rh_pct,dps_temp_C,dps_press_hPa,ina_current_mA,ina_bus_V,ina_shunt_mV,ina_power_mW,ina_energy_J,ina_die_C\r\n":
+        if first_row == "timestamp,ina_current,ina_voltage,axtx0_temp,rpm,lg_avg_speed\r\n":
             header_exists = True
         else:
             header_exists = False
@@ -58,6 +60,8 @@ try:
 
             while True:
                 try:
+                    count += 1
+                    print(count)
                     # Read one line of data from the serial port
                     data_line = ser.readline().decode('utf-8').strip()
 
@@ -66,8 +70,9 @@ try:
                         print(f"Received: {data_line}")
                         # Split the comma-separated string into a list
                         data_values = data_line.split(',')
-                        # Write the list as a new row in the CSV file
-                        csv_writer.writerow(data_values)
+                        if (count % 100) == 0:
+                            csv_writer.writerow(data_values)
+                        
 
                 except UnicodeDecodeError:
                     print("Warning: Could not decode a line. Skipping.")
@@ -83,16 +88,18 @@ try:
 
             while True:
                 try:
+                    count += 1
+                    print(count)
                     # Read one line of data from the serial port
                     data_line = ser.readline().decode('utf-8').strip()
-
+                
                     # Check if the line is not empty
                     if data_line:
                         print(f"Received: {data_line}")
                         # Split the comma-separated string into a list
                         data_values = data_line.split(',')
-                        # Write the list as a new row in the CSV file
-                        csv_writer.writerow(data_values)
+                        if (count % 100) == 0:
+                            csv_writer.writerow(data_values)
 
                 except UnicodeDecodeError:
                     print("Warning: Could not decode a line. Skipping.")
