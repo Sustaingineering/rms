@@ -64,8 +64,9 @@ while True:
 
 
     # pin 0: {voltage_0:1.3f}, pin 1: {voltage_1:1.3f}, pin 0: {status_0:8s}, pin 1: {status_1:8s}, 
-    print(f"status: {status:6s}, close time: {time_since_close:1.3f}, open time: {time_since_open:1.3f}, rpm: {rpm}")
-    time.sleep(0.001)
+    print(f"status: {status:6s}, close time: {time_since_close:1.3f}, open time: {time_since_open:1.3f}, rpm: {rpm}", flush=True)
+    # small delay to avoid overwhelming the serial buffer / host
+    time.sleep(0.01)
 
 
     #pin 0 high = closed
