@@ -1,6 +1,7 @@
 import serial
 import csv
 import time
+import math as math
 
 # --- Configuration ---
 SERIAL_PORT = '/dev/tty.usbmodem1101' 
@@ -63,7 +64,34 @@ try:
                     if data_line:
                         # Split the comma-separated string into a list
                         data_values = data_line.split(',')
+
+                        wind_speed = float(data_values[-1])
+                        rpm = float(data_values[-2])
+
+                        diameter = 0.82 #meters
+                        height = 0.95 #meters
+
+                        angular_velocity = rpm * (2 * math.pi/60)
+
+                        #print(f"Wind Speed {wind_speed}")
+                        #print(f"RPM: {rpm}")
+                        #print(f"Angular Velocity: {angular_velocity}")
+
+                        p_0 = 1.225 #standard air density of air
+
+                        wind_power = (1/2) * p_0 * diameter * height * wind_speed**3
+
+                        current = float(data_values[1])
+                        voltage = float(data_values[2])
+
+                        turbine_power = current * voltage
+
                         if (count % frequency) == 0:
+                            print(f"Wind Power: {wind_power}")
+                            print(f"Turbine Power: {turbine_power}")
+                            if turbine_power != 0:
+                                print(f"Coefficient: {wind_power/turbine_power}")
+
                             csv_writer.writerow(data_values)
                             print(f"Saving: {data_line}")
                         

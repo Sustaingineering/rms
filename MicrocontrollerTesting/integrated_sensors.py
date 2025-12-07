@@ -1,164 +1,139 @@
-#Microcontroller Imports
-import board
+import serial
+import csv
 import time
-import adafruit_ina228 #INA228
-import adafruit_ahtx0 #AHTX0
-from analogio import AnalogIn #pins for microcontroller
+import math as math
 
-########## To Edit #####################
-#True = Data read from sensor
-#False = Data ignored from sensor 
-print_INA228 = True
-print_AHTX0 = True
-print_lightGate = True
-print_anemometer = True
+# --- Configuration ---
+SERIAL_PORT = '/dev/tty.usbmodem1101' 
+BAUD_RATE = 115200
+OUTPUT_FILE = 'sensor_data.csv'
 
-closes_per_rot = 12 # How many times the lightgate sensor closes per rotation
-wind_speed_factor = 0.66 
+frequency = 20 # frequency (smaller value = faster collection rate)
 
-#Board setup
-i2c = board.I2C()
-# i2c = board.STEMMA_I2C()  # For using the built-in STEMMA QT connector on a microcontroller
+print(f"Attempting to connect to {SERIAL_PORT}...")
 
-#INA228
-ina228 = adafruit_ina228.INA228(i2c)
+count = 0
 
-#AHTX0
-ahtx0 = adafruit_ahtx0.AHTx0(i2c)
+try:
+    # Connect to the serial port
+    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
+    print(f"Successfully connected to {SERIAL_PORT}.")
+    time.sleep(2) # Wait for the connection to establish and MCU to reset
 
-#set up pins
-analog_0_in = AnalogIn(board.A0)
-analog_1_in = AnalogIn(board.A1)
-analog_2in = AnalogIn(board.A2)
+    # Header
+    header = "timestamp,ina_current,ina_voltage,axtx0_temp,rpm,lg_avg_speed"
+    header = header.split(',')
 
-def get_voltage(pin):
-    return (pin.value * 3.3) / 65536
+    # Determining whether the actual CSV file exists
+    try: # Attempt to open CSV file
+        with open(OUTPUT_FILE, 'r', newline='') as csv_file: 
+            print("CSV file found")
+            reader = csv.reader(csv_file)
+    except: #If fails, create the file with name OUTPUT_FILE
+        print("CSV file not found. Creating CSV ile")
+        with open(OUTPUT_FILE, 'w', newline='') as csv_file:
+            writer = csv.writer(csv_file)
 
-def check_status_lightGate(voltage):
-    if voltage > 3:
-        return "active"
-    else:
-        return "inactive"
+    # Determining if file has already been written to
+    header_exists = False
 
-def check_status_anemometer(voltage):
-    if voltage > 3.2:
-        return "open"
-    elif voltage < 0.1:
-        return "closed"
-    else:
-        return "???"
+    with open(OUTPUT_FILE, 'r', newline='') as csv_file:
+        reader = csv.reader(csv_file)
 
-#Light Gate variables
-status = "open"
-delay = 0
-last_close = 0
-last_open = time.monotonic()
-time_since_close = 0
-time_since_open = 0
-rpm = 0
-close_times = []
-
-#Anemometer variables 
-# Variables for counting closures per second
-closure_count = 0
-wind_speed = 0
-wind_speeds = []  # stores recent wind speed readings
-avg_window = 5    # number of seconds to average over
-last_state = "open"
-start_time = time.monotonic()
-last_closure_count = 0
-last_wind_speed = 0
-last_avg_speed = 0
-
-while True: #FOR CSV WRITING
-    #Timestamp
-    timestamp = time.monotonic() # Using monotonic() is often better for duration on MCUs
-    print(f"{timestamp:.3f},", end=' ')
-
-    #For light gate:
-    voltage_0 = get_voltage(analog_0_in)
-    voltage_1 = get_voltage(analog_1_in)
-
-    status_0 = check_status_lightGate(voltage_0)
-    status_1 = check_status_lightGate(voltage_1)
-
-    #INA
-    if print_INA228 == True:
-        ina_current = f"{ina228.current:2.2f}"
-        ina_bus = f"{ina228.bus_voltage:2.2f}"
-    else:
-        ina_current = False
-        ina_bus = False
-    print(f"{ina_current},{ina_bus}", end=',')
-
-    #AM2301B Sensor
-    if print_AHTX0:
-        ahtx0_temp = f"{ahtx0.temperature:2.2f}"
-    else:
-        ahtx0_temp = False
-    print(f"{ahtx0_temp}", end=',')
+        first_row = str(next(csv_file, None))
+        
+        if first_row == "timestamp,ina_current,ina_voltage,axtx0_temp,rpm,lg_avg_speed\r\n":
+            header_exists = True
+        else:
+            header_exists = False
+        
     
-    #Light gate:
-    if print_lightGate == True:
-        if status == "open" and status_1 == "active": # just closed
-            status = "closed"
-            if last_close == 0: last_close = time.monotonic()
-            else: 
-                current_time = time.monotonic()
-                time_since_close = current_time - last_close
-                last_close = current_time
+    if header_exists == True:
+        print("Appending Data")
+        with open(OUTPUT_FILE, 'a', newline = '') as csv_file:
+            csv_writer = csv.writer(csv_file)
 
-                close_times.append(time_since_close)
+            while True:
+                try:
+                    count += 1
+                    #print(count)
+                    # Read one line of data from the serial port
+                    data_line = ser.readline().decode('utf-8').strip()
+                
+                    # Check if the line is not empty
+                    if data_line:
+                        # Split the comma-separated string into a list
+                        data_values = data_line.split(',')
 
-                if len(close_times) > closes_per_rot:
-                    close_times.pop(0)
+                        wind_speed = float(data_values[-1])
+                        rpm = float(data_values[-2])
 
-                total_time = sum(close_times) * closes_per_rot / len(close_times)
+                        diameter = 0.82 #meters
+                        height = 0.95 #meters
 
-                rpm = 1 / (total_time) * 60
+                        angular_velocity = rpm * (2 * math.pi/60)
 
-        if status == "closed" and status_0 == "active": # just opened
-            status = "open"
-            if last_open == 0: last_open = time.monotonic()
-            else: 
-                current_time = time.monotonic()
-                time_since_open = current_time - last_open
-                last_open = current_time
-    else:
-        rpm = False
-    print(f"{rpm}", end=',')
+                        #print(f"Wind Speed {wind_speed}")
+                        #print(f"RPM: {rpm}")
+                        #print(f"Angular Velocity: {angular_velocity}")
 
-    #anemometer:
-    if print_anemometer == True:
-        voltage = get_voltage(analog_2in)
-        state = check_status_anemometer(voltage)
+                        p_0 = 1.225 #standard air density of air
 
-        # Detect a transition from open -> closed
-        if state == "closed" and last_state == "open":
-            closure_count += 1
+                        wind_power = (1/2) * p_0 * diameter * height * wind_speed**3
 
-        last_state = state
+                        current = float(data_values[1])
+                        voltage = float(data_values[2])
 
-        # Every second, print the number of closures and reset the counter
-        if time.monotonic() - start_time >= 1.0:
-            wind_speed = wind_speed_factor * closure_count
-            wind_speeds.append(wind_speed)
+                        turbine_power = current * voltage
 
-            # Keep only the most recent avg_window readings
-            if len(wind_speeds) > avg_window:
-                wind_speeds.pop(0)
+                        if (count % frequency) == 0:
+                            print(f"Wind Power: {wind_power}")
+                            print(f"Turbine Power: {turbine_power}")
+                            if turbine_power != 0:
+                                print(f"Coefficient: {wind_power/turbine_power}")
 
-            avg_speed = sum(wind_speeds) / len(wind_speeds)
+                            csv_writer.writerow(data_values)
+                            print(f"Saving: {data_line}")
+                        
 
-            last_closure_count = closure_count
-            last_wind_speed = wind_speed
-            last_avg_speed = f"{avg_speed:4.2f}"
+                except UnicodeDecodeError:
+                    print("Warning: Could not decode a line. Skipping.")
+                except KeyboardInterrupt:
+                    print("\nStopping logging.")
+                    break
 
-            closure_count = 0
-            start_time = time.monotonic()
-    else:
-        last_avg_speed = False
-    print(f"{last_avg_speed}", end='')
+    else: #Header does not exist, CSV file is blank
+        print("Header does not exist, writing new data")
+        with open(OUTPUT_FILE, 'w', newline = '') as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(header)
 
-    print(" ")
-    time.sleep(0.001)
+            while True:
+                try:
+                    count += 1
+                    #print(count)
+                    # Read one line of data from the serial port
+                    data_line = ser.readline().decode('utf-8').strip()
+                
+                    # Check if the line is not empty
+                    if data_line:
+                        # Split the comma-separated string into a list
+                        data_values = data_line.split(',')
+                        if (count % frequency) == 0:
+                            csv_writer.writerow(data_values)
+                            print(f"Saving: {data_line}")
+
+                except UnicodeDecodeError:
+                    print("Warning: Could not decode a line. Skipping.")
+                except KeyboardInterrupt:
+                    print("\nStopping logging.")
+                    break
+        
+except serial.SerialException as e:
+    print(f"Error: Could not open serial port {SERIAL_PORT}.")
+    print(f"Details: {e}")
+    print("Please check the port name and ensure the device is connected.")
+finally:
+    if 'ser' in locals() and ser.is_open:
+        ser.close()
+        print("Serial port closed.")

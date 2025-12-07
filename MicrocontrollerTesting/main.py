@@ -13,7 +13,7 @@ print_AHTX0 = True
 print_lightGate = True
 print_anemometer = True
 
-closes_per_rot = 12 # How many times the lightgate sensor closes per rotation
+wind_speed_factor = 0.66 
 
 #Board setup
 i2c = board.I2C()
@@ -56,6 +56,8 @@ time_since_close = 0
 time_since_open = 0
 rpm = 0
 close_times = []
+SLITS_PER_REV = 2
+GEAR_RATIO = 7
 
 #Anemometer variables 
 # Variables for counting closures per second
@@ -72,7 +74,7 @@ last_avg_speed = 0
 while True: #FOR CSV WRITING
     #Timestamp
     timestamp = time.monotonic() # Using monotonic() is often better for duration on MCUs
-    print(f"{timestamp:.3f}", end=' ')
+    print(f"{timestamp:.3f},", end='')
 
     #For light gate:
     voltage_0 = get_voltage(analog_0_in)
@@ -85,40 +87,53 @@ while True: #FOR CSV WRITING
     if print_INA228 == True:
         ina_current = ina228.current
         ina_bus = ina228.bus_voltage
-    print(f",{ina_current:2.2f},{ina_bus:2.2f}", end=',')
+    else:
+        ina_current = False
+        ina_bus = False
+    print(f"{ina_current:5.2f},{ina_bus:5.2f}", end=',')
 
     #AM2301B Sensor
     if print_AHTX0:
         ahtx0_temp = ahtx0.temperature
-    print(f"{ahtx0_temp:3.2f}", end=',')
+    else:
+        ahtx0_temp = False
+    print(f"{ahtx0_temp:6.2f}", end=',')
     
     #Light gate:
-    if print_lightGate == True:
-        if status == "open" and status_1 == "active": # just closed
+    # Light gate:
+    # Light Gate variables (Initial setup, retaining necessary state variables)
+    status = "open"
+    last_close = 1 # Time of the previous slit detection
+    time_for_half_rev_shaft = 0 # Stores the calculated time (in seconds)
+    
+    # Inside your main 'while True:' loop:
+    
+    # Light gate detection logic:
+    if print_lightGate == True: # Assuming this flag controls light gate processing
+        # Check if the light gate just closed (meaning a slit was just detected)
+        if status == "open" and status_1 == "active":
             status = "closed"
-            if last_close == 0: last_close = time.monotonic()
-            else: 
-                current_time = time.monotonic()
-                time_since_close = current_time - last_close
-                last_close = current_time
-
-                close_times.append(time_since_close)
-
-                if len(close_times) > closes_per_rot:
-                    close_times.pop(0)
-
-                total_time = sum(close_times) * closes_per_rot / len(close_times)
-
-                rpm = 1 / (total_time) * 60
-
-        if status == "closed" and status_0 == "active": # just opened
-            status = "open"
-            if last_open == 0: last_open = time.monotonic()
-            else: 
-                current_time = time.monotonic()
-                time_since_open = current_time - last_open
-                last_open = current_time
-        print(f"{rpm}", end=',')
+            
+            current_time = time.monotonic()
+            
+            # This logic requires at least one previous reading (last_close != 0)
+            if last_close != 0: 
+                # Calculate the time elapsed since the last slit detection
+                time_for_half_rev_shaft = current_time - last_close
+                
+                # *** At this point, 'time_for_half_rev_shaft' is the time
+                # *** taken for the geared shaft to complete half a revolution.
+                
+                # You can now use this variable to calculate RPM:
+                # Time for full rev (T) = time_for_half_rev_shaft * 2
+                # RPM_shaft = 60 / T
+                # RPM_turbine = RPM_shaft / 7
+            
+            last_close = current_time # Update the time of this most recent closure
+    #print("Hello")
+    #print(f"{current_time}")
+    print(f"{time_for_half_rev_shaft:5.2f}", end='')
+        
 
     #anemometer:
     if print_anemometer == True:
@@ -133,7 +148,7 @@ while True: #FOR CSV WRITING
 
         # Every second, print the number of closures and reset the counter
         if time.monotonic() - start_time >= 1.0:
-            wind_speed = 0.66 * closure_count
+            wind_speed = wind_speed_factor * closure_count
             wind_speeds.append(wind_speed)
 
             # Keep only the most recent avg_window readings
@@ -148,15 +163,9 @@ while True: #FOR CSV WRITING
 
             closure_count = 0
             start_time = time.monotonic()
-        print(f"{last_avg_speed:4.2f}", end='')
+    else:
+        last_avg_speed = False
+    print(f"{last_avg_speed:5.2f}", end='')
 
-    # pin 0: {voltage_0:1.3f}, pin 1: {voltage_1:1.3f}, pin 0: {status_0:8s}, pin 1: {status_1:8s}, 
     print(" ")
     time.sleep(0.001)
-
-
-    #pin 0 high = closed
-    #pin 1 high = open
-    #15 rps
-
-    #-----------------------------------------------------
