@@ -34,10 +34,10 @@ def get_voltage(pin):
     return (pin.value * 3.3) / 65536
 
 def check_status_lightGate(voltage):
-    if voltage > 3:
-        return "active"
+    if voltage > 2.8:
+        return "light"
     else:
-        return "inactive"
+        return "dark"
 
 def check_status_anemometer(voltage):
     if voltage > 3.2:
@@ -47,17 +47,17 @@ def check_status_anemometer(voltage):
     else:
         return "???"
 
-#Light Gate variables
-status = "open"
-delay = 0
-last_close = 0
-last_open = time.monotonic()
-time_since_close = 0
-time_since_open = 0
-rpm = 0
-close_times = []
+#Lightgate variables
 SLITS_PER_REV = 2
 GEAR_RATIO = 7
+time_difference_dark_pass = 0
+time_difference_light_pass = 0
+half_rot_time = 0
+last_status = "unknown"
+begin_dark_time = 0
+end_dark_time = 0
+begin_light_time = 0
+end_light_time = 0
 
 #Anemometer variables 
 # Variables for counting closures per second
@@ -110,29 +110,40 @@ while True: #FOR CSV WRITING
     
     # Light gate detection logic:
     if print_lightGate == True: # Assuming this flag controls light gate processing
-        # Check if the light gate just closed (meaning a slit was just detected)
-        if status == "open" and status_1 == "active":
-            status = "closed"
+        voltage_0 = get_voltage(analog_0_in)
+        voltage_1 = get_voltage(analog_1_in)
+
+        #when lightgate is detecting something
+        #voltage_0 is 0.86
+        #voltage_1 is 2.88
+    
+        #when lightgate is detecting nothing
+        #voltage_0 is 2.86
+        #voltage_1 is 0.97
+
+        status = check_status_lightGate(voltage_0)
+
+        if status != last_status:
+
+            if status == "dark":
+                end_light_time = timestamp
+                begin_dark_time = timestamp
+
+                time_difference_light_pass = end_light_time - begin_light_time
+
+                half_rot_time = time_difference_light_pass + time_difference_dark_pass
+            if status == "light":
+                begin_light_time = timestamp
+                end_light_time = timestamp
+
+                time_difference_dark_pass = end_dark_time + begin_dark_time
             
-            current_time = time.monotonic()
-            
-            # This logic requires at least one previous reading (last_close != 0)
-            if last_close != 0: 
-                # Calculate the time elapsed since the last slit detection
-                time_for_half_rev_shaft = current_time - last_close
-                
-                # *** At this point, 'time_for_half_rev_shaft' is the time
-                # *** taken for the geared shaft to complete half a revolution.
-                
-                # You can now use this variable to calculate RPM:
-                # Time for full rev (T) = time_for_half_rev_shaft * 2
-                # RPM_shaft = 60 / T
-                # RPM_turbine = RPM_shaft / 7
-            
-            last_close = current_time # Update the time of this most recent closure
-    #print("Hello")
-    #print(f"{current_time}")
-    print(f"{time_for_half_rev_shaft:5.2f}", end='')
+            last_status = status
+
+        full_rot_time = half_rot_time * 2
+        rpm_gear = 60/full_rot_time
+        rpm_turbine = rpm_gear / GEAR_RATIO
+    print(f"{rpm_turbine}", end='')
         
 
     #anemometer:
