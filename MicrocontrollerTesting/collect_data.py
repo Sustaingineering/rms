@@ -4,9 +4,9 @@ import time
 import math as math
 
 # --- Configuration ---
-SERIAL_PORT = '/dev/tty.usbmodem101' 
+SERIAL_PORT = '/dev/tty.usbmodem1101' 
 BAUD_RATE = 115200
-OUTPUT_FILE = 'sensor_data.csv'
+OUTPUT_FILE = 'sensor_data_no_temp.csv'
 
 frequency = 20 # frequency (smaller value = faster collection rate)
 
@@ -21,7 +21,7 @@ try:
     time.sleep(2) # Wait for the connection to establish and MCU to reset
 
     # Header
-    header = "timestamp,ina_current,ina_voltage,axtx0_temp,rpm,lg_avg_speed"
+    header = "timestamp,ina_current,ina_voltage,rpm,lg_avg_speed,wind_power"
     header = header.split(',')
 
     # Determining whether the actual CSV file exists
@@ -42,7 +42,7 @@ try:
 
         first_row = str(next(csv_file, None))
         
-        if first_row == "timestamp,ina_current,ina_voltage,axtx0_temp,rpm,lg_avg_speed\r\n":
+        if first_row == "timestamp,ina_current,ina_voltage,rpm,lg_avg_speed,wind_power\r\n":
             header_exists = True
         else:
             header_exists = False
@@ -65,29 +65,26 @@ try:
                         # Split the comma-separated string into a list
                         data_values = data_line.split(',')
                         
-                        """
+                        
                         wind_speed = float(data_values[-1])
-                        rpm = float(data_values[-2])
-                    
+                        
+                        #Calculating Wind Power
                         diameter = 0.82 #meters
                         height = 0.95 #meters
-                    
-                        angular_velocity = rpm * (2 * math.pi/60)
-                    
-                        #print(f"Wind Speed {wind_speed}")
-                        #print(f"RPM: {rpm}")
-                        #print(f"Angular Velocity: {angular_velocity}")
-                    
                         p_0 = 1.225 #standard air density of air
                     
                         wind_power = (1/2) * p_0 * diameter * height * wind_speed**3
-                    
-                        current = float(data_values[1])
-                        voltage = float(data_values[2])
-                    
-                        turbine_power = current * voltage
-                        """
                         
+                        data_values.append(str(wind_power))
+
+                        #Calculating Turbine Power
+                        #rpm = float(data_values[-2])
+                        #angular_velocity = rpm * (2 * math.pi/60)
+
+                        #power_coefficient = P_turbine/P_wind
+                        #P_turbine = angular_velocity * torque
+
+                        data_line = ",".join(data_values)
 
                         if (count % frequency) == 0:
                             #print(f"Wind Power: {wind_power}")
