@@ -2,8 +2,8 @@ import boto3
 from botocore.exceptions import ClientError
 
 BUCKET = "bucket-rms-data"
-LOCAL_FILE = "/home/pi/data/sensor_data.csv" # path inside the raspbery pi
-REMOTE_KEY = "testing/sensor.csv"   # path inside S3 bucket
+LOCAL_FILE = "/home/sustaingineering/rms/MicrocontrollerTesting/sensor_data_no_temp.csv" # path inside the raspbery pi
+REMOTE_KEY = "testing/test_sensor.csv"   # path inside S3 bucket
 
 def upload():
     s3 = boto3.client("s3")
