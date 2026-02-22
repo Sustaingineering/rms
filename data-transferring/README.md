@@ -1,17 +1,19 @@
 
-## Architecture Overview
 
+```text
 Sensors (Raspberry Pi)
         ↓
-    AWS S3 (raw CSV files)
+AWS S3 (raw CSV files)
         ↓
- ETL Script (Python)
+ETL Script (Python)
         ↓
- PostgreSQL Database
+PostgreSQL Database
         ↓
- Web / Dashboard (future)
+Web / Dashboard (future)
+```
 
 ## Project Structure
+```text
 data-transferring/
 ├── etl_s3_to_postgres.py    # ETL script (S3 → PostgreSQL)
 ├── requirements.txt         # Python dependencies
@@ -19,6 +21,7 @@ data-transferring/
 ├── sql/
 │   └── schema.sql           # Database schema
 └── README.md
+```
 
 ## Requirements
 - Python 3.10 or higher
@@ -44,7 +47,7 @@ Main libraries used:
 
 # Enviroment Variables
 
-Create a .env file and paste the following values:
+Create a `.env` file and paste the following values:
 DB_HOST=localhost
 DB_NAME=sensor_data
 DB_USER=postgres
