@@ -1,5 +1,5 @@
 
-
+## Overview
 ```text
 Sensors (Raspberry Pi)
         ↓
@@ -43,12 +43,14 @@ Main libraries used:
 1. Open pgAdmin
 2. Create a PostgreSQL database (e.g. sensor_data)
 3. Open the Query Tool
-4. Run the schema file located at: sql/schema.sql
+4. Run the schema file located at: `sql/schema.sql`
 
 # Enviroment Variables
 
 Create a `.env` file and paste the following values:
+```text
 DB_HOST=localhost
 DB_NAME=sensor_data
 DB_USER=postgres
 DB_PASSWORD=your_postgres_password
+```
