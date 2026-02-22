@@ -1,6 +1,6 @@
-## 🏗️ Architecture Overview
 
-```text
+## Architecture Overview
+
 Sensors (Raspberry Pi)
         ↓
     AWS S3 (raw CSV files)
