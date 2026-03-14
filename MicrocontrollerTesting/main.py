@@ -16,19 +16,23 @@ print_anemometer = True
 wind_speed_factor = 0.66 
 
 #Board setup
-i2c = board.I2C()
+if print_INA228 == True or print_AHTX0 == True:
+    i2c = board.I2C()
 # i2c = board.STEMMA_I2C()  # For using the built-in STEMMA QT connector on a microcontroller
 
 #INA228
-ina228 = adafruit_ina228.INA228(i2c)
+if print_INA228 == True:
+    ina228 = adafruit_ina228.INA228(i2c)
 
 #AHTX0
-ahtx0 = adafruit_ahtx0.AHTx0(i2c)
+if print_AHTX0 == True:
+    ahtx0 = adafruit_ahtx0.AHTx0(i2c)
 
 #set up pins
-analog_0_in = AnalogIn(board.A0)
-analog_1_in = AnalogIn(board.A1)
-analog_2in = AnalogIn(board.A2)
+if print_lightGate == True or print_anemometer == True:
+    analog_0_in = AnalogIn(board.A0)
+    analog_1_in = AnalogIn(board.A1)
+    analog_2in = AnalogIn(board.A2)
 
 def get_voltage(pin):
     return (pin.value * 3.3) / 65536
@@ -77,11 +81,12 @@ while True: #FOR CSV WRITING
     print(f"{timestamp:.3f},", end='')
 
     #For light gate:
-    voltage_0 = get_voltage(analog_0_in)
-    voltage_1 = get_voltage(analog_1_in)
+    if print_lightGate == True:
+        voltage_0 = get_voltage(analog_0_in)
+        voltage_1 = get_voltage(analog_1_in)
 
-    status_0 = check_status_lightGate(voltage_0)
-    status_1 = check_status_lightGate(voltage_1)
+        status_0 = check_status_lightGate(voltage_0)
+        status_1 = check_status_lightGate(voltage_1)
 
     #INA
     if print_INA228 == True:
