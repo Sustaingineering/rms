@@ -26,16 +26,16 @@ sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
 
 while True:
     #SHT
-    sht_temp, sht_rh = sht.measurements
+    sht_temp, sht_humidity = sht.measurements
 
     #DPS
     dps_temp = dps310.temperature
-    dps_press = dps310.pressure
+    dps_pressure = dps310.pressure
     
     #Timestamp
     timestamp = time.monotonic() # Using monotonic() is often better for duration on MCUs
 
-    print(f"{timestamp:.3f},{sht_temp:.2f},{sht_rh:.2f},{dps_temp:.2f},{dps_press:.2f}\n")
+    print(f"{timestamp:.3f},{sht_temp:.2f},{sht_humidity:.2f},{dps_pressure:.2f}\n")
     
     time.sleep(1)
 
