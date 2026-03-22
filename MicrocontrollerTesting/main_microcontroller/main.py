@@ -3,22 +3,33 @@ import board
 import time
 import adafruit_ina228 #INA228
 import adafruit_ahtx0 #AHTX0
+from adafruit_dps310.basic import DPS310 #DPS310
+import adafruit_sht4x #SHT45
 from analogio import AnalogIn #pins for microcontroller
 
 ########## To Edit #####################
 #True = Data read from sensor
 #False = Data ignored from sensor 
-print_INA228 = True
-print_AHTX0 = True
-print_lightGate = True
+print_INA228 = False
+print_AHTX0 = False
+print_lightGate = False
 print_anemometer = True
+print_SHT45 = True
+print_DPS310 = True
 
 wind_speed_factor = 0.66 
 
 #Board setup
-if print_INA228 == True or print_AHTX0 == True:
-    i2c = board.I2C()
-# i2c = board.STEMMA_I2C()  # For using the built-in STEMMA QT connector on a microcontroller
+i2c = board.I2C()
+
+#DPS310
+if print_DPS310 == True:
+    dps310 = DPS310(i2c)
+
+#SHT45
+if print_SHT45 == True:
+    sht = adafruit_sht4x.SHT4x(i2c)
+    sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
 
 #INA228
 if print_INA228 == True:
@@ -44,12 +55,10 @@ def check_status_lightGate(voltage):
         return "dark"
 
 def check_status_anemometer(voltage):
-    if voltage > 3.2:
+    if voltage > 3:
         return "open"
     elif voltage < 0.1:
         return "closed"
-    else:
-        return "???"
 
 #Lightgate variables
 SLITS_PER_REV = 2
@@ -75,7 +84,7 @@ last_closure_count = 0
 last_wind_speed = 0
 last_avg_speed = 0
 
-while True: #FOR CSV WRITING
+while True:
     #Timestamp
     timestamp = time.monotonic() # Using monotonic() is often better for duration on MCUs
     print(f"{timestamp:.3f},", end='')
@@ -92,26 +101,29 @@ while True: #FOR CSV WRITING
     if print_INA228 == True:
         ina_current = ina228.current
         ina_bus = ina228.bus_voltage
-    else:
-        ina_current = False
-        ina_bus = False
-    print(f"{ina_current:5.2f},{ina_bus:5.2f}", end=',')
+        print(f"{ina_current:5.2f},{ina_bus:5.2f}", end=',')
 
     #AM2301B Sensor
     if print_AHTX0:
         ahtx0_temp = ahtx0.temperature
-    else:
-        ahtx0_temp = False
-    print(f"{ahtx0_temp:6.2f}", end=',')
+        print(f"{ahtx0_temp:6.2f}", end=',')
+
+    #SHT45 Sensor
+    if print_SHT45:
+        sht_temp, sht_humidity = sht.measurements
+        print(f"{sht_temp:.2f},{sht_humidity:.2f}", end=',')
     
-    #Light gate:
+    #DPS310 Sensor
+    if print_DPS310:
+        dps_pressure = dps310.pressure
+        print(f"{dps_pressure:.2f}", end=',')
+
+    
     # Light gate:
     # Light Gate variables (Initial setup, retaining necessary state variables)
     status = "open"
     last_close = 1 # Time of the previous slit detection
     time_for_half_rev_shaft = 0 # Stores the calculated time (in seconds)
-    
-    # Inside your main 'while True:' loop:
     
     # Light gate detection logic:
     if print_lightGate == True: # Assuming this flag controls light gate processing
@@ -148,8 +160,12 @@ while True: #FOR CSV WRITING
         full_rot_time = half_rot_time * 2
         rpm_gear = 60/full_rot_time
         rpm_turbine = rpm_gear / GEAR_RATIO
-    print(f"{rpm_turbine}", end='')
-        
+        print(f"{rpm_turbine}", end=',')
+
+    #AM2301B Sensor
+    if print_AHTX0:
+        ahtx0_temp = ahtx0.temperature
+        print(f"{ahtx0_temp:6.2f}", end=',')
 
     #anemometer:
     if print_anemometer == True:
@@ -179,9 +195,9 @@ while True: #FOR CSV WRITING
 
             closure_count = 0
             start_time = time.monotonic()
+        print(f"{last_avg_speed:5.2f}", end='')
     else:
         last_avg_speed = False
-    print(f"{last_avg_speed:5.2f}", end='')
 
-    print(" ")
+    print("")
     time.sleep(0.001)
