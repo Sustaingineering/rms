@@ -3,7 +3,7 @@ import time
 import paho.mqtt.client as mqtt
 
 #Config
-SERIAL_PORT       = '/dev/tty.usbmodem1101'
+SERIAL_PORT       = '/dev/ttyACM0' #'/dev/tty.usbmodem1101'
 BAUD_RATE         = 115200
 MQTT_BROKER       = "io.adafruit.com"
 ADAFRUIT_USERNAME = "SustaingineeringElec"
