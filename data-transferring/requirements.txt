@@ -1,0 +1,4 @@
+boto3
+pandas
+psycopg2-binary
+python-dotenv
