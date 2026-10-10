@@ -7,7 +7,7 @@ import os
 load_dotenv()
 
 #Config
-SERIAL_PORT       = "COM3"
+SERIAL_PORT       = '/dev/ttyACM0' #/dev/tty.usbmodem1101
 BAUD_RATE         = 115200
 MQTT_BROKER       = "io.adafruit.com"
 ADAFRUIT_USERNAME = "SustaingineeringElec"
