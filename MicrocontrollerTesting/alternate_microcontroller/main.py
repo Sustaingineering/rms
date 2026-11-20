@@ -36,5 +36,6 @@ while True:
     timestamp = time.monotonic() # Using monotonic() is often better for duration on MCUs
 
     print(f"{timestamp:.3f},{sht_temp:.2f},{sht_humidity:.2f},{dps_pressure:.2f}\n")
+    #print(f"{timestamp:.3f},{sht_temp:.2f},{sht_humidity:.2f}\n")
     
     time.sleep(1)
