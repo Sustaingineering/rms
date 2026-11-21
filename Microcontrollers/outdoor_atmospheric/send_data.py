@@ -7,12 +7,13 @@ import os
 load_dotenv()
 
 #Config
-SERIAL_PORT       = '/dev/ttyACM0' #/dev/tty.usbmodem1101
+#SERIAL_PORT       = '/dev/ttyACM0' #/dev/tty.usbmodem1101
+SERIAL_PORT       = '/dev/tty.usbmodem2101'
 BAUD_RATE         = 115200
 MQTT_BROKER       = "io.adafruit.com"
 ADAFRUIT_USERNAME = "SustaingineeringElec"
 ADAFRUIT_KEY      = os.getenv('ADAFRUIT_KEY')
-PUBLISH_INTERVAL  = 5 #seconds
+PUBLISH_INTERVAL  = 30 #seconds
 
 #Client Setup
 client = mqtt.Client()
@@ -28,10 +29,10 @@ def clean_and_send(data_string):
     #Parses timestamp, temperature (sht), relative humidity, pressure and sends to MQTT
     try:
         data_parts = data_string.strip().split(",")
-        wind_speed = data_parts[1]
-        temperature = data_parts[2]
-        relative_humidity = data_parts[3]
-        pressure = data_parts[4]
+        wind_speed = data_parts[0]
+        temperature = data_parts[1]
+        relative_humidity = data_parts[2]
+        pressure = data_parts[3]
 
         print("Connected:", client.is_connected())
 
